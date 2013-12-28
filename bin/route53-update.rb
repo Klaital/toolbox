@@ -22,6 +22,7 @@ def find_cname_for_domain(domain)
   domain_rset
 end
 
+
 def usage
   str = <<USAGE
 route53-update: Inform Route53 of a change in this server's IP
