@@ -56,8 +56,8 @@ puts "Searching for Record Sets with name matching '#{domain}'"
 rset = find_cname_for_domain(domain)
 puts "#{rset}"
 
-if (!rset.nil? && rset.type == 'CNAME')
-  puts "Updating CNAME with new value: #{new_value}"
+if (!rset.nil? && rset.type == 'A')
+  puts "Updating A record with new value: #{new_value}"
   rset.resource_recordsi[0][:value] = new_value
   rset.update
 end
