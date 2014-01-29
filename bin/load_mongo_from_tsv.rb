@@ -1,3 +1,11 @@
+# load_mongo_from_tsv.rb
+#
+# @author Chris Cox
+# @date 2014-01-29
+#
+# A simple tool for pushing data from a flatfile into a MongoDB database 
+# 
+
 require_relative File.join('..','lib','configs')
 require_relative File.join('..','lib','parse_arg')
 require 'mongo'
