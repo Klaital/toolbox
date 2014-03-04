@@ -16,8 +16,7 @@ alias please='sudo'
 
 # Enhancing ls to prefix with git branch info 
 # when working in a source-controlled path
-alias lg='git status 2>/dev/null|grep branch;ls'
-alias ls=lg
+alias ls='git status 2>/dev/null|grep branch;ls'
 
 # Lazy shortcuts 
 alias gitst='git status'
