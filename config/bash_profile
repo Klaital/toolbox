@@ -1,0 +1,30 @@
+# .bash_profile
+
+# Get the aliases and functions
+#if [ -f ~/.bashrc ]; then
+#	. ~/.bashrc
+#fi
+
+# User specific environment and startup programs
+
+PATH=$PATH:$HOME/bin
+
+export PATH
+
+# For the lulz
+alias please='sudo'
+
+# Enhancing ls to prefix with git branch info 
+# when working in a source-controlled path
+alias lg='git status 2>/dev/null|grep branch;ls'
+alias ls=lg
+
+# Lazy shortcuts 
+alias gitst='git status'
+alias gist='git status'
+
+# TMUS-specific stuff
+if [ -f ~/.bash_tmus ]; then
+	. ~/.bash_tmus
+fi
+
