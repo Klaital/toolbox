@@ -27,3 +27,8 @@ if [ -f ~/.bash_tmus ]; then
 	. ~/.bash_tmus
 fi
 
+# Deploy a release candidate to the [test|prod] branch
+alias deploy-test='git checkout deploy-test; git merge master; git push; git checkout master'
+alias deploy-prod='git checkout deploy-prod; git merge master; git push; git checkout master'
+
+
