@@ -31,4 +31,7 @@ fi
 alias deploy-test='git checkout deploy-test; git merge master; git push; git checkout master'
 alias deploy-prod='git checkout deploy-prod; git merge master; git push; git checkout master'
 
+# Add the Xerces install path/variables
+export PATH="$PATH:/home/ccox37/bin/xerces-c-3.1.1-x86_64-linux-gcc-3.4/bin
+export LD_LIBRARY_PATH=/home/ccox37/bin/xerces-c-3.1.1-x86_64-linux-gcc-3.4/lib:$LD_LIBRARY_PATH
 
