@@ -1,0 +1,11 @@
+#!/bin/env ruby
+
+require 'optparse'
+strip_first   = true
+column        = 0
+split_pattern = ' '
+
+while(s=gets)
+  s = s.strip if strip_first
+  puts s.strip.split(/#{split_pattern}/)[column]
+end

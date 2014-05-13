@@ -1,0 +1,21 @@
+#!/bin/env ruby
+
+require 'optparse'
+strip_first   = true
+column        = 0
+split_pattern = ' '
+use_float     = false
+
+sum = 0
+
+while(s=gets)
+  s = s.strip if strip_first
+  token = s.strip.split(/#{split_pattern}/)[column]
+  if use_float
+  	sum += token.to_f
+  else
+  	sum += token.to_i
+  end
+end
+
+puts sum
