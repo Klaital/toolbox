@@ -33,14 +33,15 @@ class Car
   end
 
   # Compute how cost-effective the fun rating is for this car.
-  # This is computed in terms of unit horsepower per MSRP dollar * 1000000.
+  # This is computed in terms of unit horsepower per TCO dollar * 1000000.
   # @param features [String] Either 'min' or 'loaded'.
-  def mega_funs(features='min')
+  def mega_funs(features='min', gas_type='regular', miles = 100000)
     fun = unit_horsepower
-    cost = @specs["msrp_#{features}"]
-    return 0 if fun.nil? || cost.nil? || cost.to_i == nil
+    base_cost = @specs["msrp_#{features}"]
+    gas_cost = total_gas_cost(gas_type, miles, 'city')
+    return 0 if fun.nil? || base_cost.nil? || base_cost.to_i == 0 || base_cost == 'NULL'
 
-    fun.to_f * 1000000 / cost.to_f
+    fun.to_f * 1000000 / (base_cost.to_f + gas_cost)
   end
 
   def fun_descr(driving_type = 'city', features = 'min')
