@@ -1,15 +1,17 @@
 require 'yaml'
+require 'mongo'
 
 class Car
   attr_reader :specs
   def initialize(specs={})
     @specs = specs
-    @gas_prices = YAML.load( File.join(__dir__, '..', 'config', 'gas_prices.yaml'))
+    @gas_prices = YAML.load_file( File.join(__dir__, '..', 'config', 'gas_prices.yaml') )
+    puts @gas_prices if $DEBUG
   end
 
   def gallons_burned(miles = 100000, driving_type='city')
-    return nil unless @specs.has_key?("mpg_#{driving_type}".to_sym)
-    mpg = @specs[driving_mpg].to_i
+    return nil unless @specs.has_key?("mpg_#{driving_type}")
+    mpg = @specs["mpg_#{driving_type}"].to_i
 
     miles / mpg
   end
@@ -22,8 +24,8 @@ class Car
   # Compute "fun" in terms of peak engine power per unit mass.
   # Computed here in horsepower peak per pound curb weight.
   def unit_horsepower
-    hp = @specs[:peak_power]
-    weight = @specs[:empty_weight]
+    hp = @specs['peak_power']
+    weight = @specs['empty_weight']
 
     return nil if hp.nil? || weight.nil?
 
@@ -42,9 +44,13 @@ class Car
   end
 
   def fun_descr(driving_type = 'city', features = 'min')
-    min_cost = total_gas_cost(@stats[:gas_type].downcase, 100000, 'city') + @stats[:msrp_min].to_i
-    max_cost = total_gas_cost(@stats[:gas_type].downcase, 100000, 'city') + @stats[:msrp_loaded].to_i
-    "#{@stats[:year]}\t#{@stats[:make]}\t#{@stats[:model]}\t#{@stats[:variant]}\t$#{min_cost} - $#{max_cost}\t#{mega_funs('min')} - #{mega_funs('loaded')}"
+    gas_type = @specs['gas_type'].downcase
+    puts "GasType=#{gas_type}" if $DEBUG
+    gas_cost = total_gas_cost(gas_type, 100000, driving_type)
+    puts "TotalGasCost=#{gas_cost}" if $DEBUG
+    min_cost = gas_cost + @specs['msrp_min'].to_i
+    max_cost = gas_cost + @specs['msrp_loaded'].to_i
+    "#{@specs['year']}\t#{@specs['make']}\t#{@specs['model']}\t#{@specs['variant']}\t$#{min_cost} - $#{max_cost}\t#{mega_funs('min')} - #{mega_funs('loaded')}"
   end
 end
 
@@ -54,6 +60,11 @@ if __FILE__ == $0
   coll = db['cars']
   cursor = coll.find({})
   cursor.each do |doc|
-    car = Car.new(doc.to_h)
+    data = doc.to_h
+    puts data if $DEBUG
+    car = Car.new(data)
+    puts car.specs.nil? if $DEBUG
     puts car.fun_descr
+  end
 end
+
