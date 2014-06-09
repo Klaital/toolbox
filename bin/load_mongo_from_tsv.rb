@@ -9,46 +9,51 @@
 require_relative File.join('..','lib','configs')
 require_relative File.join('..','lib','parse_arg')
 require 'mongo'
+require 'optparse'
 
-def usage
-  s = <<USAGE
+database = 'test'
+collection = 'auto_import' 
+input = $stdin
+do_truncate = false
+delimitor = '\t'
+chomp_str = nil
+
+OptionParser.new do |opt|
+  opt.banner = <<USAGE
 ruby #{__FILE__} --database DB_NAME --collection COLLECTION_NAME [--input PATH] [--separator SEP] [--truncate]
 
 A tool to load a text file into a MongoDB collection, using the first row to define the field names.
-
- --database, -db DB_NAME          -- Specify the database name. Required. 
-                                     Will be created if not extant.
- --collection, -c COLLECTION_NAME -- Specify the collection name. Required.
-                                     Will be created if not extant.
- --input, -i PATH    -- Specify the name of the file to be loaded. If none 
-                        is given, data will be read from standard input on 
-                        the console.
- --separator, -s SEP -- Specify the delimitor character. Defaults to TAB.
- --truncate          -- If specified, drop all existing data from the
-                        collection before importing.
 USAGE
+  opt.on('-db', '--database DB', 'Specify the database name. Required. Will be created if not extant.') do |db|
+    database = db
+  end
 
-end
+  opt.on('-c', '--collection COLL', 'Sepcify the collection name. Required. Will be created if not extant.') do |coll|
+    collection = coll
+  end
+  
+  opt.on('-i', '--input PATH', 'Specify the name of the file to be loaded. If none is given, data will be read from standard input on the console.') do |path|
+    input = File.open(path, 'r')
+  end
 
-database = parse_arg(ARGV, ['--database','-db'], true)
-collection = parse_arg(ARGV, ['--collection', '-c'], true)
-input_path = parse_arg(ARGV, ['--input','-i'], true)
-do_truncate = parse_arg(ARGV, ['--truncate'], false)
-delimitor = parse_arg(ARGV, ['--separator','-s', '-d', '--delimitor'], true, "\t")
+  opt.on('-s', '--separator CHAR', 'Specify the delimitor character. Defaults to TAB.') do |sep|
+    delimitor = sep
+  end
 
-if database.nil? || collection.nil?
-  puts usage
-  exit 1
-end
+  opt.on('-t', '--truncate', 'Drop all existing data from the collection before importing.') do
+    do_truncate = true
+  end
 
-input_stream = if input_path.nil?
-  $stdin
-elsif File.exist?(input_path)
-  File.open(input_path, 'r')
-else
-  puts "Unable to open input file: #{input_path}"
-  exit 1
-end
+  opt.on('--chomp CHAR', 'Characters to remove if found at both the beginning and end of a token') do |char|
+    chomp_str = char
+  end
+
+  opt.on_tail('-h', '--help', 'Display this messgae') do
+    puts opt
+    exit(0)
+  end
+
+end.parse!
 
 db = Mongo::MongoClient.new.db(database)
 coll = db[collection]
@@ -59,14 +64,16 @@ if do_truncate
 end
 
 # Read the input file and load up the database
-headers = input_stream.gets
+headers = input.gets
 if headers.nil?
   puts "No header row found."
   exit 1
 end
-headers = headers.split(delimitor).collect {|t| t.strip}
+headers = headers.split(delimitor).collect do |t| 
+  t.strip
+end
 
-input_stream.each_line do |line|
+input.each_line do |line|
   # Skip empty lines
   next if line.nil? || line.strip.length == 0
   
