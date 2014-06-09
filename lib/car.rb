@@ -18,7 +18,8 @@ class Car
 
   def total_gas_cost(gas_type = 'regular', miles=100000, driving_type='city')
     return nil unless @gas_prices.has_key?(gas_type.downcase.to_sym)
-    @gas_prices[gas_type.downcase.to_sym].to_f * miles.to_i
+    
+    @gas_prices[gas_type.downcase.to_sym].to_f * gallons_burned(miles, driving_type)
   end
 
   # Compute "fun" in terms of peak engine power per unit mass.
@@ -35,13 +36,13 @@ class Car
   # Compute how cost-effective the fun rating is for this car.
   # This is computed in terms of unit horsepower per TCO dollar * 1000000.
   # @param features [String] Either 'min' or 'loaded'.
-  def mega_funs(features='min', gas_type='regular', miles = 100000)
+  def giga_funs(features='min', gas_type='regular', miles = 100000)
     fun = unit_horsepower
     base_cost = @specs["msrp_#{features}"]
     gas_cost = total_gas_cost(gas_type, miles, 'city')
     return 0 if fun.nil? || base_cost.nil? || base_cost.to_i == 0 || base_cost == 'NULL'
 
-    fun.to_f * 1000000 / (base_cost.to_f + gas_cost)
+    (fun.to_f * 1000000000 / (base_cost.to_f + gas_cost)).round(1)
   end
 
   def fun_descr(driving_type = 'city', features = 'min')
@@ -51,7 +52,7 @@ class Car
     puts "TotalGasCost=#{gas_cost}" if $DEBUG
     min_cost = gas_cost + @specs['msrp_min'].to_i
     max_cost = gas_cost + @specs['msrp_loaded'].to_i
-    "#{@specs['year']}\t#{@specs['make']}\t#{@specs['model']}\t#{@specs['variant']}\t$#{min_cost} - $#{max_cost}\t#{mega_funs('min')} - #{mega_funs('loaded')}"
+    "#{@specs['year']}\t#{@specs['make']}\t#{@specs['model'].ljust(10,' ')}\t#{@specs['variant'].ljust(10,' ')}\t$#{min_cost} - $#{max_cost}\t#{giga_funs('min', gas_type)} - #{giga_funs('loaded', gas_type)}"
   end
 end
 
