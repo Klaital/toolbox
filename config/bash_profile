@@ -7,7 +7,7 @@
 
 # User specific environment and startup programs
 
-PATH=$PATH:$HOME/bin
+PATH=$PATH:$HOME/bin:$HOME/bin/RubyMine-6.3.2/bin
 
 export PATH
 
