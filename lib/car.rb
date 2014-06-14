@@ -45,6 +45,15 @@ class Car
     (fun.to_f * 1000000000 / (base_cost.to_f + gas_cost)).round(1)
   end
 
+  def min_cost(driving_type = 'city', features = 'min')
+    gas_cost = total_gas_cost(@specs['gas_type'].downcase, 100000, driving_type)
+    gas_cost + @specs['msrp_min'].to_i
+  end
+  def max_cost(driving_type = 'city', features = 'min')
+    gas_cost = total_gas_cost(@specs['gas_type'].downcase, 100000, driving_type)
+    gas_cost + @specs['msrp_loaded'].to_i
+  end
+
   def fun_descr(driving_type = 'city', features = 'min')
     gas_type = @specs['gas_type'].downcase
     puts "GasType=#{gas_type}" if $DEBUG
@@ -58,6 +67,7 @@ end
 
 
 if __FILE__ == $0
+  cars = {} # Sort by price
   db = Mongo::MongoClient.new.db('shopping')
   coll = db['cars']
   cursor = coll.find({})
@@ -66,7 +76,12 @@ if __FILE__ == $0
     puts data if $DEBUG
     car = Car.new(data)
     puts car.specs.nil? if $DEBUG
-    puts car.fun_descr
+    cars[car.max_cost] = car
+  end
+
+  cars.keys.sort.each do |price|
+    puts cars[price].fun_descr
   end
 end
+
 
