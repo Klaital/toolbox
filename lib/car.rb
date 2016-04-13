@@ -4,7 +4,7 @@ class Car
   attr_reader :specs
   def initialize(specs={})
     @specs = specs
-    @gas_prices = YAML.load( File.join(__dir__, '..', 'config', 'gas_prices.yaml'))
+    @gas_prices = YAML.load_file( File.join(__dir__, '..', 'config', 'gas_prices.yaml'))
   end
 
   def gallons_burned(miles = 100000, driving_type='city')
