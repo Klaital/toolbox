@@ -9,11 +9,11 @@ require 'json'
 class Position
   attr_reader :cur_price, :cur_price_timestamp
   def initialize(conf={})
-    @purchase_date = conf.has_key?(:purchase_date) ? (Date.parse(conf[:purchase_date])) : Date.today
-    @symbol        = conf[:symbol]
-    @quantity      = conf[:quantity].to_i
-    @buy_price     = conf[:buy_price].to_i / 100.0
-    @commission    = conf[:commission].to_i / 100.0
+    @purchase_date = conf.has_key?('purchase_date') ? (Date.parse(conf['purchase_date'])) : Date.today
+    @symbol        = conf['symbol']
+    @quantity      = conf['quantity'].to_i
+    @buy_price     = conf['buy_price'].to_i / 100.0
+    @commission    = conf['commission'].to_i / 100.0
 
   end
 
@@ -63,35 +63,57 @@ class Position
   def total_gain
     (((current_value - initial_value) - @commission) * 100).round / 100.0
   end
+
+  def self.load_set_from_mongo(mongo_conf={})
+  end
+
+  def self.load_set_from_file(path=File.join(__DIR__,'positions.json'))
+    positions = []
+    raw_data = File.read(path)
+    puts "> Raw: #{raw_data}"
+    data = JSON.load(File.open(path))
+    puts "> Data (#{data.class}): #{data}"
+    data.each do |datum|
+      puts "Parsing datum: #{datum}"
+      positions.push(Position.new(datum))
+    end
+
+
+    return positions
+  end
 end
 
 ############################
 #### MAIN - for testing ####
 ############################
 if __FILE__ == $0
-  # 
-  # Pull the list of positions from a local mongo collection
-  #
-  require 'mongo'
-  db = Mongo::MongoClient.new( 'localhost', 27017 ).db( 'stocks' )
-  position_table = db[ 'positions' ]
-  position_list = position_table.find()
   
   positions = []
-  # Reformat the entries to use symbols rather than string keys.
-  position_list.each do |doc|
-    p = Position.new({
-      :purchase_date => doc['purchase_date'],
-      :symbol        => doc['symbol'],
-      :quantity      => doc['quantity'],
-      :buy_price     => doc['buy_price'],
-      :commission    => doc['commission']
-    })
-    positions.push(p)
+  if File.exists?(ARGV[-1])
+    positions = Position.load_set_from_file(ARGV[-1])
+  else
+
+    # 
+    # Pull the list of positions from a local mongo collection
+    #
+    require 'mongo'
+    db = Mongo::MongoClient.new( 'localhost', 27017 ).db( 'stocks' )
+    position_table = db[ 'positions' ]
+    position_list = position_table.find()
+    
+    # # Reformat the entries to use symbols rather than string keys.
+    position_list.each do |doc|
+    #   p = Position.new({
+    #     :purchase_date => doc['purchase_date'],
+    #     :symbol        => doc['symbol'],
+    #     :quantity      => doc['quantity'],
+    #     :buy_price     => doc['buy_price'],
+    #     :commission    => doc['commission']
+    #   })
+      p = Position.new(doc)
+      positions.push(p)
+    end
   end
-  
-  # TODO: query web API for current stock values
-  # TODO: compute current value of each position
 
   # Show the header row
   puts "Buy Date\tStock\tQty\tBuy $\tComm.\tCur. $\t$Cur. Value\tGain"
