@@ -22,9 +22,9 @@ alias ls='git status 2>/dev/null|grep branch;ls'
 alias gitst='git status'
 alias gist='git status'
 
-# Log in to my home server. This will only work from outside WANNET
-# unless klaital.com has been added to /etc/hosts
+# Log in to my home server.
 alias go_home='ssh chris@klaital.com'
+alias home='ssh chris@klaital.com'
 
 # TMUS-specific stuff
 if [ -f ~/.bash_tmus ]; then
