@@ -22,6 +22,10 @@ alias ls='git status 2>/dev/null|grep branch;ls'
 alias gitst='git status'
 alias gist='git status'
 
+# Log in to my home server. This will only work from outside WANNET
+# unless klaital.com has been added to /etc/hosts
+alias go_home='ssh chris@klaital.com'
+
 # TMUS-specific stuff
 if [ -f ~/.bash_tmus ]; then
 	. ~/.bash_tmus
@@ -34,4 +38,13 @@ alias deploy-prod='git checkout deploy-prod; git merge master; git push; git che
 # Add the Xerces install path/variables
 export PATH="$PATH:/home/ccox37/bin/xerces-c-3.1.1-x86_64-linux-gcc-3.4/bin"
 export LD_LIBRARY_PATH=/home/ccox37/bin/xerces-c-3.1.1-x86_64-linux-gcc-3.4/lib:$LD_LIBRARY_PATH
+
+# Add the vertx binary
+export PATH="$PATH:$HOME/bin/vertx/bin"
+
+# Add the IntelliJ binaries
+export PATH="$PATH:$HOME/bin/idea-IU-145.258.11/bin"
+
+# Add the Mongo binaries
+export PATH="$PATH:$HOME/bin/mongodb-linux-x86_64-ubuntu1404-3.2.4/bin"
 
