@@ -18,7 +18,7 @@ class Position
   end
 
   def to_s
-    "#{@purchase_date}\t#{@symbol}\t#{@quantity}\t#{@buy_price}\t#{@commission}\t#{current_price}\t#{current_value}\t#{total_gain}"
+    "#{@purchase_date}\t#{@symbol}\t#{@quantity}\t#{@buy_price}\t#{@commission}\t#{current_price}\t#{current_value}\t#{total_gain}\t#{overall_yield}%"
   end
 
   def current_price
@@ -64,6 +64,11 @@ class Position
     (((current_value - initial_value) - @commission) * 100).round / 100.0
   end
 
+  # Computes the total gain as a percentage of the initial investment
+  def overall_yield
+    (total_gain * 10000/ initial_value).round / 100.0
+  end
+
   def self.load_set_from_mongo(mongo_conf={})
   end
 
@@ -89,7 +94,7 @@ end
 if __FILE__ == $0
   
   positions = []
-  if File.exists?(ARGV[-1])
+  if ARGV.length > 0 && File.exists?(ARGV[-1])
     positions = Position.load_set_from_file(ARGV[-1])
   else
 
@@ -116,7 +121,7 @@ if __FILE__ == $0
   end
 
   # Show the header row
-  puts "Buy Date\tStock\tQty\tBuy $\tComm.\tCur. $\t$Cur. Value\tGain"
+  puts "Buy Date\tStock\tQty\tBuy $\tComm.\tCur. $\t$Cur. Value\tGain\tYield"
 
   # Fill in the CSV rows for each position
   total_value = 0
