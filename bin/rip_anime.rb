@@ -6,6 +6,7 @@ require 'optparse'
 require_relative File.join('..','lib','dvd_title.rb')
 
 options = {
+  'test_mode' => true, # By default, don't actually launch the ripping commands
   'src_path' => 'E:\\',
   'dst_root' => 'D:\\rips',
   'series_name' => '',
@@ -23,6 +24,10 @@ options = {
 
 OptionParser.new do |opts|
   opts.banner = "A handbrake cli wrapper specialized for anime ripping. Usage: #{__FILE__} [options]"
+
+  opts.on('-r', '--run', '--rip', 'Actually run the rip commands after they\'ve been generated.') do
+    options['test_mode'] = false
+  end
 
   opts.on('-i', '--source PATH', 'The DVD root path') do |p|
     options['src_path'] = p
@@ -125,6 +130,18 @@ end
 
 print "> Generating command set..."
 command_set = generate_handbrake_rip_commands(options, titleset)
-puts ">> Got #{command_set.length} files to rip:"
-command_set.each {|c| puts "`#{c}`"}
+puts "\t[DONE] (#{command_set.length})"
+command_set.each {|c| puts ">> `#{c}`"} 
+
+unless options['test_mode']
+  puts "> Starting ripping..."
+  command_set.each_index do |i|
+    puts ">> Starting rip ##{i+1} / #{command_set.length}. Rip logs going to 'rips.log'"
+    puts ">> #{c}"
+    rip_start = Time.now
+    `#{c} > rips.log 2>&1`
+    rip_duration = Time.now.to_i - rip_start.to_i
+    puts ">> [DONE] (#{rip_duration} seconds)"
+  end
+end
 
