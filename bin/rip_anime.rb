@@ -64,26 +64,18 @@ OptionParser.new do |opts|
 
 end.parse!
 
-def generate_handbrake_rip_commands(options)
+def generate_handbrake_rip_commands(options, dvd_titles)
   command_set = []
 
-  season_string = case options['season']
-  when /^\d+$/
-    "S#{options['season']}"
-  else
-    "#{options['season']} "
-  end
-
   # TODO: add support for pulling the episode title from TheTVDB.com at rip-time. This could be done during the disc scan, if I can get that working again.
-  cmd_base = "#{options['handbrake_cli']} -i \"#{options['src_path']}\" -o \"#{options['dst_root']}\\#{options['series_name']} #{season_string}$episode_num.mp4\" -t $title_num -e #{options['codec']} -q #{options['quality']}"
-
+  
   offset = 0
   options['ep_count'].times do |i|
-    this_ep_num = (options['starting_ep_num'] + offset).to_s.rjust(2, '0')
+    this_ep_num = options['starting_ep_num'] + offset
     this_title_num = options['starting_title_num'] + offset
     offset += 1
 
-    command_set.push(cmd_base.gsub('$episode_num', this_ep_num).gsub('$title_num', this_title_num.to_s))
+    command_set.push(dvd_titles[this_title_num].handbrake_rip_cmd(options.merge({'ep_num' => this_ep_num})))
   end
 
   return command_set
@@ -131,8 +123,8 @@ end
 
 
 
-puts "> Generating command set"
-command_set = generate_handbrake_rip_commands(options)
+print "> Generating command set..."
+command_set = generate_handbrake_rip_commands(options, titleset)
 puts ">> Got #{command_set.length} files to rip:"
 command_set.each {|c| puts "`#{c}`"}
 

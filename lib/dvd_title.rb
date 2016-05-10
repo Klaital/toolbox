@@ -106,6 +106,22 @@ class DvdTitle
 
     return titles
   end
+
+  def handbrake_rip_cmd(options)
+    season_string = case options['season']
+    when /^\d+$/
+      "S#{options['season']}"
+    else
+      "#{options['season']} "
+    end
+
+    # TODO: add support for pulling the episode title from TheTVDB.com at rip-time. This could be done during the disc scan, if I can get that working again.
+    cmd_base = "#{options['handbrake_cli']} -i \"#{options['src_path']}\" -o \"#{options['dst_root']}\\#{options['series_name']} #{season_string}$episode_num.mp4\" -t $title_num -e #{options['codec']} -q #{options['quality']}"
+
+    this_ep_num = options['ep_num'].to_s.rjust(2, '0')
+
+    cmd_base.gsub('$episode_num', this_ep_num).gsub('$title_num', @title.to_s)
+  end
 end
 
 ##################
