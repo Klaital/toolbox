@@ -62,6 +62,9 @@ class Geocoder
       @log.error("Error from Google API: #{resultset.code} #{resultset.message}: #{resultset.body.to_s}. Sleeping 5 seconds before the next retry")
       sleep(5)
       resultset = query_google(address)
+    end
+
+    return resultset
   end
 
 
@@ -96,6 +99,7 @@ if $0 == __FILE__
     # Input file has one column: the address
     # It may have quotation marks around it from when it was encoded as CSV. Remove them if present
     addr = s.strip
+    next if addr.length == 0 # Skip empty lines outright
     addr = addr[1...-1] if addr[0] == '"'
     geocode = g.encode(addr)
 
