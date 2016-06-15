@@ -28,15 +28,17 @@ class Geocoder
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE
 
       request = Net::HTTP::Get.new uri
-      @log.info("Looking up '#{address}' via '#{endpoint}'")
+      @log.info {"Looking up '#{address}' via '#{endpoint}'"}
       start_time = Time.now
       response = http.request(request)
-      @log.info("Response #{response.code} took #{((Time.now.to_f - start_time.to_f) * 1000).round} ms")
+      @log.info {"Response #{response.code} took #{((Time.now.to_f - start_time.to_f) * 1000).round} ms"}
+
+      @log.debug {"Response was #{response.body.length} characters. Contents: #{response.body}"}
 
       return case response
       when Net::HTTPSuccess
         # Parse the requested JSON
-        JSON.load(response.read_body)
+        JSON.load(response.read_body)['results']
       else
         # Essentially, rethrow the error
         response
@@ -58,8 +60,8 @@ class Geocoder
       return nil
     end
 
-    until(resultset.kind_of?(Net::HTTPSuccess))
-      @log.error("Error from Google API: #{resultset.code} #{resultset.message}: #{resultset.body.to_s}. Sleeping 5 seconds before the next retry")
+    until(resultset.kind_of?(Hash) || resultset.kind_of?(Array))
+      @log.error {"Error from Google API: #{resultset.code} #{resultset.message}: #{resultset.body.to_s}. Sleeping 5 seconds before the next retry"}
       sleep(5)
       resultset = query_google(address)
     end
@@ -105,12 +107,18 @@ if $0 == __FILE__
 
     # Google might return multiple results. Write an error to a separate file from successful searches
     if geocode.length > 1
-      ef.puts JSON.generate({'address' => address, 'locations' => geocode})
-      outf.puts "\"#{address}\",MULTIPLE,MULTIPLE,MULTIPLE" # Keep the output file with the same number and order of rows as the input file
+      ef.puts JSON.generate({'address' => addr, 'locations' => geocode})
+      outs = "\"#{addr}\",MULTIPLE,MULTIPLE,MULTIPLE" # Keep the output file with the same number and order of rows as the input file
+      outf.puts outs
+      puts outs
     elsif geocode.length == 0
-      outf.puts "\"#{address}\"" # Keep the output file with the same number and order of rows as the input file
+      outs = "\"#{addr}\"" # Keep the output file with the same number and order of rows as the input file
+      outf.puts outs
+      puts outs
     else
-      outf.puts "\"#{address}\",#{geocode[0]['geometry']['lat']},#{geocode[0]['geometry']['lng']},\"#{geocode[0]['formatted_address']}\""
+      outs = "\"#{addr}\",#{geocode[0]['geometry']['location']['lat']},#{geocode[0]['geometry']['location']['lng']},\"#{geocode[0]['formatted_address']}\""
+      outf.puts outs
+      puts outs
     end
   end
 
@@ -120,7 +128,5 @@ if $0 == __FILE__
   outf.close
   ef.flush
   ef.close
-
-  
-  puts g.encode(ARGV[-1])
 end
+
