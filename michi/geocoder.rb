@@ -5,15 +5,36 @@ require 'net/https'
 require 'uri'
 require 'json'
 require 'logger'
+require 'csv'
 
-
-GOOGLE_API_KEY = 'AIzaSyBbQQxvFqayNuN_nE71m0Z7iUOSUigMZV4' # Enter your API key here (https://developers.google.com/maps/documentation/geocoding/start#get-a-key)
+require_relative '../lib/credentials.rb'
 
 class Geocoder
   def initialize(opts={})
-    @api_key = opts[:api_key] || GOOGLE_API_KEY
+    @api_key = opts[:api_key] || CREDENTIALS['google']['geocode_api']['key']
     @log = opts[:log] || Logger.new($stdout)
     @api_url = 'https://maps.googleapis.com/maps/api/geocode/json?address=$ADDRESS&key=$API_KEY'
+  end
+
+  def filter_by_county(api_results, select_county = 'King County')
+    @log.debug {"Filtering to county = '#{select_county}'. Starting with #{api_results.length} results."}
+
+    api_results.select do |location|
+      # Find the address_components subdoc that contains the county info
+
+      county = location['address_components'].select {|addr| addr['types'].include?('administrative_area_level_2') }
+
+      if county.length == 0
+        @log.warn {"Found no counties at all in location #{location['formatted_address']}"}
+        false
+      elsif county[0]['short_name'] == select_county
+        @log.debug {"Found #{select_county}. This location will be kept: #{location['formatted_address']}"}
+        true
+      else
+        @log.warn {"County '#{county[0]['short_name']}' is not '#{select_county}'. Removing location: #{location['formatted_address']}"}
+        false
+      end
+    end
   end
 
   # Execute the Google Geocache API call, and return the raw result.
@@ -73,6 +94,56 @@ class Geocoder
   # helper function to format the address the way Google wants it
   def self.encode_address(raw_address)
     raw_address.gsub(' ', '+')
+  end
+
+  def parse_file(inpath, outpath, errpath, opts={})
+    # Read the input spreadsheet here
+    inf = File.open(inpath, 'r')
+    # Write the output spreadsheet here 
+    outf = File.open(outpath, 'w')
+    # Write out a log of any addresses with multiple locations found here
+    # (this file is a list of JSON documents, one per line)
+    errf = File.open(errpath, 'w')
+
+    while s=inf.gets
+
+      # Echo empty lines back into the output file
+      if s.strip.length == 0
+        outf.puts ""
+        puts ""
+        next
+      end
+
+      # Parse the line into an array. The CSV library correctly drops the
+      # trailing newline character, and handles cells which use quotation
+      # marks to enclose text containing a comma.
+      line = s.parse_csv
+
+      # Reassign the array entries into named variables.
+      row_id, raw_address, lat, lng = line
+
+      # Some rows already have the lat/long coordinates. Just echo these back out
+      # TODO: check the accuracy of these coordinates against Google's
+      unless lat.nil? || lng.nil?
+        outf.print s
+        print s
+        next
+      end
+
+      # For the rest of rows, make an API call to find the lat/long coordinates possibly associated with the address
+      # (there will likely be multiple results for vaguely-written addresses, such as merely '123 Fake St')
+      locations = encode(raw_address)
+
+      # We know from out-of-band knowledge that all of these addresses are in King County, WA.
+      locations = filter_by_county(locations, 'WA')
+
+    end
+
+    inf.close
+    outf.flush
+    outf.close
+    errf.flush
+    errf.close
   end
 end
 
