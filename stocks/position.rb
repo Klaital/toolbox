@@ -75,11 +75,8 @@ class Position
   def self.load_set_from_file(path=File.join(__DIR__,'positions.json'))
     positions = []
     raw_data = File.read(path)
-    puts "> Raw: #{raw_data}"
     data = JSON.load(File.open(path))
-    puts "> Data (#{data.class}): #{data}"
     data.each do |datum|
-      puts "Parsing datum: #{datum}"
       positions.push(Position.new(datum))
     end
 
