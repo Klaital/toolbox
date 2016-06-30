@@ -1,0 +1,16 @@
+[
+    {
+        "symbol": "DIA",
+        "purchase_date": "2016-03-29",
+        "quantity": 226,
+        "buy_price": 17720,
+        "commission": 995
+    },
+    {
+        "symbol": "ONEQ",
+        "purchase_date": "2016-03-29",
+        "quantity": 208,
+        "buy_price": 19184,
+        "commission": 995
+    }
+]
