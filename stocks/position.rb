@@ -33,13 +33,13 @@ class Position
       return @cur_price
     end
 
-    uri = 'http://finance.yahoo.com/webservice/v1/symbols/$symbol/quote?format=json'.gsub('$symbol', @symbol)
+    uri = 'http://myallies.com/api/quote/$symbol'.gsub('$symbol', @symbol)
     uri = URI.parse(uri)
 
     response = Net::HTTP.get_response(uri)
     if response.code == '200'
       payload = JSON.parse(response.body)
-      price = payload['list']['resources'][0]['resource']['fields']['price'].to_f
+      price = payload['LastTradePriceOnly'].to_f
       price_rounded = (price * 100).round / 100.0
 
     else
