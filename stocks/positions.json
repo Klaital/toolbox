@@ -12,5 +12,12 @@
         "quantity": 208,
         "buy_price": 19184,
         "commission": 995
+    },
+    {
+        "symbol": "TMUS",
+        "purchase_date": "2015-11-13",
+        "quantity": 80,
+        "buy_price": 0,
+        "commission": 0
     }
 ]
